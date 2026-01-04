@@ -9,12 +9,14 @@
 
     <script src="script.js"></script>
     <script>
-        // Test with different player counts
+        // Test with different player counts (5-10 are supported)
         const testCases = [
-            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'], // 9 players - critical test case
-            ['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace', 'Henry'], // 8 players
-            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10'], // 10 players
-            ['A', 'B', 'C', 'D', 'E'] // 5 players
+            ['P1', 'P2', 'P3', 'P4', 'P5'], // 5 players
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'], // 6 players
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'], // 7 players
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'], // 8 players
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'], // 9 players
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10'] // 10 players
         ];
 
         let output = '';

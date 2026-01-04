@@ -18,109 +18,77 @@ function generateRoster() {
         return;
     }
 
-    const roster = createRotation(players);
-    displayRoster(roster, players);
+    try {
+        const roster = createRotation(players);
+        displayRoster(roster, players);
+    } catch (error) {
+        document.getElementById('output').innerHTML = `<p class="error">${error.message}</p>`;
+    }
 }
 
 function createRotation(players) {
     const numPlayers = players.length;
-    const totalSlots = COLORS.length * PERIODS;
-    const playsPerPlayer = Math.floor(totalSlots / numPlayers);
-    const extraSlots = totalSlots % numPlayers;
 
-    // Divide players into odd and even position groups for skill distribution
-    // Odd positions: 1st, 3rd, 5th, 7th, 9th (indices 0, 2, 4, 6, 8)
-    // Even positions: 2nd, 4th, 6th, 8th, 10th (indices 1, 3, 5, 7, 9)
-    const oddGroup = [];
-    const evenGroup = [];
-    for (let i = 0; i < numPlayers; i++) {
-        if (i % 2 === 0) {
-            oddGroup.push(i);
-        } else {
-            evenGroup.push(i);
-        }
+    // Hardcoded rotations for supported player counts
+    // Each rotation is an array of 6 periods, each period has 5 player indices
+    const rotations = {
+        5: [
+            [0, 1, 2, 3, 4], // Period 1: all 5 play
+            [0, 1, 2, 3, 4], // Period 2: all 5 play
+            [0, 1, 2, 3, 4], // Period 3: all 5 play
+            [0, 1, 2, 3, 4], // Period 4: all 5 play
+            [0, 1, 2, 3, 4], // Period 5: all 5 play
+            [0, 1, 2, 3, 4]  // Period 6: all 5 play
+        ],
+        6: [
+            [0, 2, 4, 5, 1], // Period 1: 1,3,5,6,2 (alternating + extras)
+            [1, 3, 5, 0, 2], // Period 2: 2,4,6,1,3
+            [0, 2, 4, 1, 3], // Period 3: 1,3,5,2,4
+            [1, 3, 5, 2, 4], // Period 4: 2,4,6,3,5
+            [0, 2, 4, 3, 5], // Period 5: 1,3,5,4,6
+            [1, 3, 5, 0, 4]  // Period 6: 2,4,6,1,5
+        ],
+        7: [
+            [0, 2, 4, 6, 1], // Period 1: 1,3,5,7,2
+            [1, 3, 5, 0, 2], // Period 2: 2,4,6,1,3
+            [0, 2, 4, 6, 3], // Period 3: 1,3,5,7,4
+            [1, 3, 5, 2, 4], // Period 4: 2,4,6,3,5
+            [0, 2, 4, 6, 5], // Period 5: 1,3,5,7,6
+            [1, 3, 5, 0, 6]  // Period 6: 2,4,6,1,7
+        ],
+        8: [
+            [0, 2, 4, 6, 1], // Period 1: 1,3,5,7,2
+            [1, 3, 5, 7, 0], // Period 2: 2,4,6,8,1
+            [0, 2, 4, 6, 3], // Period 3: 1,3,5,7,4
+            [1, 3, 5, 7, 2], // Period 4: 2,4,6,8,3
+            [0, 2, 4, 6, 5], // Period 5: 1,3,5,7,6
+            [1, 3, 5, 7, 4]  // Period 6: 2,4,6,8,5
+        ],
+        9: [
+            [0, 2, 4, 6, 8], // Period 1: 1,3,5,7,9
+            [1, 3, 5, 7, 0], // Period 2: 2,4,6,8,1
+            [0, 2, 4, 6, 8], // Period 3: 1,3,5,7,9
+            [1, 3, 5, 7, 2], // Period 4: 2,4,6,8,3
+            [0, 2, 4, 6, 8], // Period 5: 1,3,5,7,9
+            [1, 3, 5, 7, 4]  // Period 6: 2,4,6,8,5
+        ],
+        10: [
+            [0, 2, 4, 6, 8], // Period 1: 1,3,5,7,9
+            [1, 3, 5, 7, 9], // Period 2: 2,4,6,8,10
+            [0, 2, 4, 6, 8], // Period 3: 1,3,5,7,9
+            [1, 3, 5, 7, 9], // Period 4: 2,4,6,8,10
+            [0, 2, 4, 6, 8], // Period 5: 1,3,5,7,9
+            [1, 3, 5, 7, 9]  // Period 6: 2,4,6,8,10
+        ]
+    };
+
+    // Check if we support this number of players
+    if (!rotations[numPlayers]) {
+        throw new Error(`Only 5-10 players are supported. You entered ${numPlayers} players.`);
     }
 
-    // Track how many times each player should play
-    const targetPlays = players.map((_, i) =>
-        i < extraSlots ? playsPerPlayer + 1 : playsPerPlayer
-    );
-
-    // Track actual plays and last played period for each player
-    const playerStats = players.map(() => ({
-        playsCount: 0,
-        lastPlayedPeriod: -2
-    }));
-
-    // Create roster: roster[period][colorIndex] = playerIndex
-    const roster = Array(PERIODS).fill(null).map(() => Array(COLORS.length).fill(-1));
-
-    // Alternate between odd and even groups for each period
-    for (let period = 0; period < PERIODS; period++) {
-        // Start with the appropriate group based on period
-        const primaryGroup = period % 2 === 0 ? oddGroup : evenGroup;
-        const secondaryGroup = period % 2 === 0 ? evenGroup : oddGroup;
-
-        const selectedPlayers = [];
-
-        // Helper function to get available players from a group
-        const getAvailableFromGroup = (group) => {
-            return group.filter(playerIdx => {
-                const stats = playerStats[playerIdx];
-                // Can play if haven't reached target
-                return stats.playsCount < targetPlays[playerIdx];
-            }).sort((a, b) => {
-                const statsA = playerStats[a];
-                const statsB = playerStats[b];
-
-                // Prioritize those who sat out last period
-                if (statsA.lastPlayedPeriod < period - 1 && statsB.lastPlayedPeriod >= period - 1) return -1;
-                if (statsB.lastPlayedPeriod < period - 1 && statsA.lastPlayedPeriod >= period - 1) return 1;
-
-                // Then by play count (fewer plays = higher priority)
-                if (statsA.playsCount !== statsB.playsCount) {
-                    return statsA.playsCount - statsB.playsCount;
-                }
-
-                // Then by original order (skill level)
-                return a - b;
-            });
-        };
-
-        // First, get players from primary group
-        const availablePrimary = getAvailableFromGroup(primaryGroup);
-        selectedPlayers.push(...availablePrimary.slice(0, COLORS.length));
-
-        // If we need more players, get from secondary group
-        if (selectedPlayers.length < COLORS.length) {
-            const availableSecondary = getAvailableFromGroup(secondaryGroup);
-            selectedPlayers.push(...availableSecondary.slice(0, COLORS.length - selectedPlayers.length));
-        }
-
-        // If still not enough (edge case), get anyone who can play
-        if (selectedPlayers.length < COLORS.length) {
-            const allAvailable = [];
-            for (let i = 0; i < numPlayers; i++) {
-                if (!selectedPlayers.includes(i)) {
-                    allAvailable.push(i);
-                }
-            }
-            selectedPlayers.push(...allAvailable.slice(0, COLORS.length - selectedPlayers.length));
-        }
-
-        // Sort selected players by their original order (skill level) before assigning
-        selectedPlayers.sort((a, b) => a - b);
-
-        // Assign selected players to this period's colors
-        for (let colorIdx = 0; colorIdx < selectedPlayers.length && colorIdx < COLORS.length; colorIdx++) {
-            const playerIdx = selectedPlayers[colorIdx];
-            roster[period][colorIdx] = playerIdx;
-            playerStats[playerIdx].playsCount++;
-            playerStats[playerIdx].lastPlayedPeriod = period;
-        }
-    }
-
-    return roster;
+    // Return the hardcoded rotation
+    return rotations[numPlayers];
 }
 
 function displayRoster(roster, players) {
