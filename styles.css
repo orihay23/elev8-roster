@@ -112,6 +112,34 @@ h2 {
     text-align: center;
 }
 
+.copy-button {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 0 auto 20px;
+    display: block;
+    transition: all 0.2s;
+}
+
+.copy-button:hover {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.copy-button:active {
+    transform: translateY(0);
+}
+
+.copy-button.copied {
+    background: #17a2b8;
+}
+
 h3 {
     color: #555;
     margin-bottom: 15px;

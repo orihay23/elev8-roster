@@ -148,6 +148,9 @@ function createRotation(players) {
 function displayRoster(roster, players) {
     let html = '<h2>Roster Schedule</h2>';
 
+    // Add copy button
+    html += '<button class="copy-button" onclick="copyRosterToClipboard()">📋 Copy Table</button>';
+
     // Create summary
     const playCount = Array(players.length).fill(0);
     roster.forEach(period => {
@@ -165,7 +168,7 @@ function displayRoster(roster, players) {
     html += '</table></div>';
 
     // Create main roster table
-    html += '<table class="roster-table">';
+    html += '<table class="roster-table" id="rosterTable">';
 
     // Header row
     html += '<tr><th>Color</th>';
@@ -193,6 +196,53 @@ function displayRoster(roster, players) {
     html += checkConstraints(roster, players);
 
     document.getElementById('output').innerHTML = html;
+
+    // Store roster data for copying
+    window.currentRoster = { roster, players };
+}
+
+function copyRosterToClipboard() {
+    if (!window.currentRoster) {
+        alert('No roster to copy!');
+        return;
+    }
+
+    const { roster, players } = window.currentRoster;
+
+    // Create tab-separated text format for easy pasting into spreadsheets
+    let text = 'Color';
+    for (let period = 1; period <= PERIODS; period++) {
+        text += `\tPeriod ${period}`;
+    }
+    text += '\n';
+
+    // Add each color row
+    COLORS.forEach((color, colorIdx) => {
+        text += color;
+        for (let period = 0; period < PERIODS; period++) {
+            const playerIdx = roster[period][colorIdx];
+            const playerName = playerIdx !== -1 ? players[playerIdx] : '-';
+            text += `\t${playerName}`;
+        }
+        text += '\n';
+    });
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success feedback
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '✓ Copied!';
+        button.classList.add('copied');
+
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy to clipboard. Please try again.');
+        console.error('Copy failed:', err);
+    });
 }
 
 function checkConstraints(roster, players) {
