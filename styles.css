@@ -112,7 +112,15 @@ h2 {
     text-align: center;
 }
 
-.copy-button {
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.copy-button,
+.fullscreen-button {
     background: #28a745;
     color: white;
     border: none;
@@ -121,9 +129,11 @@ h2 {
     font-weight: 600;
     border-radius: 6px;
     cursor: pointer;
-    margin: 0 auto 20px;
-    display: block;
     transition: all 0.2s;
+}
+
+.fullscreen-button {
+    background: #667eea;
 }
 
 .copy-button:hover {
@@ -132,12 +142,92 @@ h2 {
     box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
-.copy-button:active {
+.fullscreen-button:hover {
+    background: #5568d3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.copy-button:active,
+.fullscreen-button:active {
     transform: translateY(0);
 }
 
 .copy-button.copied {
     background: #17a2b8;
+}
+
+/* Fullscreen overlay styles */
+.fullscreen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 9999;
+    overflow: auto;
+    animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fullscreen-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.fullscreen-title {
+    color: #333;
+    font-size: 3em;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+#fullscreenTable {
+    width: 100%;
+    max-width: 1200px;
+    font-size: 1.2em;
+}
+
+#fullscreenTable th,
+#fullscreenTable td {
+    padding: 16px;
+}
+
+.fullscreen-close {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 30px;
+    transition: all 0.2s;
+}
+
+.fullscreen-close:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.fullscreen-close:active {
+    transform: translateY(0);
 }
 
 h3 {

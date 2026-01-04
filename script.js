@@ -148,8 +148,11 @@ function createRotation(players) {
 function displayRoster(roster, players) {
     let html = '<h2>Roster Schedule</h2>';
 
-    // Add copy button
+    // Add action buttons
+    html += '<div class="action-buttons">';
     html += '<button class="copy-button" onclick="copyRosterToClipboard()">📋 Copy Table</button>';
+    html += '<button class="fullscreen-button" onclick="openFullscreen()">🖼️ Fullscreen</button>';
+    html += '</div>';
 
     // Create summary
     const playCount = Array(players.length).fill(0);
@@ -243,6 +246,68 @@ function copyRosterToClipboard() {
         alert('Failed to copy to clipboard. Please try again.');
         console.error('Copy failed:', err);
     });
+}
+
+function openFullscreen() {
+    const table = document.getElementById('rosterTable');
+    if (!table) return;
+
+    // Create fullscreen overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'fullscreenOverlay';
+    overlay.className = 'fullscreen-overlay';
+
+    // Clone the table
+    const tableClone = table.cloneNode(true);
+    tableClone.id = 'fullscreenTable';
+
+    // Create container
+    const container = document.createElement('div');
+    container.className = 'fullscreen-container';
+
+    // Add title
+    const title = document.createElement('h1');
+    title.textContent = 'Elev8 Basketball Roster';
+    title.className = 'fullscreen-title';
+
+    // Add close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'fullscreen-close';
+    closeBtn.innerHTML = '✕ Close';
+    closeBtn.onclick = closeFullscreen;
+
+    // Assemble
+    container.appendChild(title);
+    container.appendChild(tableClone);
+    container.appendChild(closeBtn);
+    overlay.appendChild(container);
+
+    document.body.appendChild(overlay);
+
+    // Add ESC key listener
+    document.addEventListener('keydown', handleEscKey);
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFullscreen() {
+    const overlay = document.getElementById('fullscreenOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+
+    // Remove ESC key listener
+    document.removeEventListener('keydown', handleEscKey);
+
+    // Restore body scroll
+    document.body.style.overflow = '';
+}
+
+function handleEscKey(e) {
+    if (e.key === 'Escape') {
+        closeFullscreen();
+    }
 }
 
 function checkConstraints(roster, players) {
