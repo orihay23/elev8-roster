@@ -51,6 +51,29 @@ For 8 players, each will play either 3 or 4 periods:
 - `styles.css` - Styling and layout
 - `test.html` - Algorithm testing page
 
+## Deployment
+
+This app is configured for automatic deployment to GitHub Pages.
+
+### Quick Deploy
+
+1. **Merge to main branch**: Merge this branch to `main` (via PR or directly)
+2. **Enable GitHub Pages**:
+   - Go to repository Settings → Pages
+   - Under "Source", select "GitHub Actions"
+   - Save
+3. **Access your app**: `https://orihay23.github.io/elev8-roster/`
+
+The included GitHub Actions workflow will automatically deploy whenever you push to the main branch.
+
+### Alternative: Deploy from current branch
+
+You can also configure GitHub Pages to deploy directly from this branch:
+- Go to Settings → Pages
+- Select this branch as the source
+- Select `/` (root) as the folder
+- Save
+
 ## Testing
 
 Open `test.html` in a browser to see test cases with different numbers of players and verify the algorithm constraints are met.
