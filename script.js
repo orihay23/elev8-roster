@@ -44,45 +44,57 @@ function createRotation(players) {
 
     // For each period, assign players to colors
     for (let period = 0; period < PERIODS; period++) {
-        const availablePlayers = [];
+        // Categorize players into priority groups
+        const mustPlay = []; // Players who sat out last period (to avoid sitting 2 in a row)
+        const canPlay = []; // Players who played last period but can play again
+        const done = []; // Players who've reached their target
 
         for (let playerIdx = 0; playerIdx < numPlayers; playerIdx++) {
             const stats = playerStats[playerIdx];
 
             // Skip if player has reached their target plays
-            if (stats.playsCount >= targetPlays[playerIdx]) continue;
+            if (stats.playsCount >= targetPlays[playerIdx]) {
+                done.push(playerIdx);
+                continue;
+            }
 
-            // Skip if player played in the previous period (would sit out this period and next)
-            if (stats.lastPlayedPeriod === period - 1) continue;
-
-            availablePlayers.push(playerIdx);
+            // Must play if they sat out the previous period (to avoid 2 consecutive sit-outs)
+            if (stats.lastPlayedPeriod < period - 1) {
+                mustPlay.push(playerIdx);
+            } else {
+                canPlay.push(playerIdx);
+            }
         }
 
-        // Sort available players by priority:
-        // 1. Those who sat out the previous period (higher priority)
-        // 2. Those who have played less
-        // 3. More skilled players (lower index) as tiebreaker
-        availablePlayers.sort((a, b) => {
+        // Sort each group by priority
+        const sortByPriority = (a, b) => {
             const statsA = playerStats[a];
             const statsB = playerStats[b];
 
-            // Prioritize those who sat out last period
-            const satOutA = statsA.lastPlayedPeriod < period - 1 ? 1 : 0;
-            const satOutB = statsB.lastPlayedPeriod < period - 1 ? 1 : 0;
-            if (satOutA !== satOutB) return satOutB - satOutA;
-
-            // Then by play count (ascending)
+            // By play count (ascending - fewer plays = higher priority)
             if (statsA.playsCount !== statsB.playsCount) {
                 return statsA.playsCount - statsB.playsCount;
             }
 
-            // Then by skill (lower index = more skilled)
+            // By skill (lower index = more skilled = higher priority)
             return a - b;
-        });
+        };
 
-        // Assign top 5 players to this period's colors
-        for (let colorIdx = 0; colorIdx < COLORS.length && colorIdx < availablePlayers.length; colorIdx++) {
-            const playerIdx = availablePlayers[colorIdx];
+        mustPlay.sort(sortByPriority);
+        canPlay.sort(sortByPriority);
+
+        // Combine: mustPlay first, then canPlay
+        const selectedPlayers = [...mustPlay, ...canPlay].slice(0, COLORS.length);
+
+        // If we still don't have 5 players, add from done players (shouldn't happen with valid input)
+        if (selectedPlayers.length < COLORS.length) {
+            done.sort(sortByPriority);
+            selectedPlayers.push(...done.slice(0, COLORS.length - selectedPlayers.length));
+        }
+
+        // Assign selected players to this period's colors
+        for (let colorIdx = 0; colorIdx < selectedPlayers.length; colorIdx++) {
+            const playerIdx = selectedPlayers[colorIdx];
             roster[period][colorIdx] = playerIdx;
             playerStats[playerIdx].playsCount++;
             playerStats[playerIdx].lastPlayedPeriod = period;
@@ -146,6 +158,30 @@ function checkConstraints(roster, players) {
     let html = '<div class="validation">';
     let allGood = true;
 
+    // Check that each period has exactly 5 players
+    roster.forEach((period, periodIdx) => {
+        const playersThisPeriod = period.filter(p => p !== -1).length;
+        if (playersThisPeriod !== COLORS.length) {
+            html += `<p class="warning">⚠️ Period ${periodIdx + 1} has ${playersThisPeriod} players (should be ${COLORS.length})</p>`;
+            allGood = false;
+        }
+    });
+
+    // Check play count distribution
+    const playCount = Array(players.length).fill(0);
+    roster.forEach(period => {
+        period.forEach(playerIdx => {
+            if (playerIdx !== -1) playCount[playerIdx]++;
+        });
+    });
+
+    const minPlays = Math.min(...playCount);
+    const maxPlays = Math.max(...playCount);
+    if (maxPlays - minPlays > 1) {
+        html += `<p class="warning">⚠️ Play count imbalance: some players play ${maxPlays} periods, others play ${minPlays}</p>`;
+        allGood = false;
+    }
+
     // Check if anyone sits out 2+ periods in a row
     const playerPeriods = Array(players.length).fill(null).map(() => []);
     roster.forEach((period, periodIdx) => {
@@ -160,7 +196,7 @@ function checkConstraints(roster, players) {
         const periods = playerPeriods[playerIdx];
         for (let i = 0; i < periods.length - 1; i++) {
             if (periods[i + 1] - periods[i] > 2) {
-                html += `<p class="warning">⚠️ ${player} sits out periods ${periods[i] + 1} through ${periods[i + 1]}</p>`;
+                html += `<p class="warning">⚠️ ${player} sits out periods ${periods[i] + 2} through ${periods[i + 1]}</p>`;
                 allGood = false;
             }
         }
@@ -168,6 +204,9 @@ function checkConstraints(roster, players) {
 
     if (allGood) {
         html += '<p class="success">✓ All constraints satisfied!</p>';
+        html += `<p class="success">✓ Each period has exactly ${COLORS.length} players</p>`;
+        html += `<p class="success">✓ No player sits out 2+ consecutive periods</p>`;
+        html += `<p class="success">✓ Fair play distribution (difference ≤ 1 period)</p>`;
     }
 
     html += '</div>';

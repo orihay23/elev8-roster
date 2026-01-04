@@ -11,9 +11,10 @@
     <script>
         // Test with different player counts
         const testCases = [
-            ['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace', 'Henry'],
-            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10'],
-            ['A', 'B', 'C', 'D', 'E']
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'], // 9 players - critical test case
+            ['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace', 'Henry'], // 8 players
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10'], // 10 players
+            ['A', 'B', 'C', 'D', 'E'] // 5 players
         ];
 
         let output = '';
@@ -53,6 +54,16 @@
             });
             output += '\n';
 
+            // Check that each period has 5 players
+            let periodViolations = false;
+            roster.forEach((period, periodIdx) => {
+                const count = period.filter(p => p !== -1).length;
+                if (count !== 5) {
+                    output += `⚠️  Period ${periodIdx + 1} has only ${count} players!\n`;
+                    periodViolations = true;
+                }
+            });
+
             // Check for sitting out 2+ in a row
             const playerPeriods = Array(players.length).fill(null).map(() => []);
             roster.forEach((period, periodIdx) => {
@@ -63,19 +74,19 @@
                 });
             });
 
-            let violations = false;
+            let sittingViolations = false;
             players.forEach((player, playerIdx) => {
                 const periods = playerPeriods[playerIdx];
                 for (let i = 0; i < periods.length - 1; i++) {
                     if (periods[i + 1] - periods[i] > 2) {
                         output += `⚠️  ${player} sits out ${periods[i + 1] - periods[i] - 1} periods (${periods[i] + 2}-${periods[i + 1]})\n`;
-                        violations = true;
+                        sittingViolations = true;
                     }
                 }
             });
 
-            if (!violations) {
-                output += '✓ No sitting violations!\n';
+            if (!periodViolations && !sittingViolations) {
+                output += '✓ All constraints satisfied!\n';
             }
 
             output += '\n';
