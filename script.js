@@ -28,6 +28,19 @@ function createRotation(players) {
     const playsPerPlayer = Math.floor(totalSlots / numPlayers);
     const extraSlots = totalSlots % numPlayers;
 
+    // Divide players into odd and even position groups for skill distribution
+    // Odd positions: 1st, 3rd, 5th, 7th, 9th (indices 0, 2, 4, 6, 8)
+    // Even positions: 2nd, 4th, 6th, 8th, 10th (indices 1, 3, 5, 7, 9)
+    const oddGroup = [];
+    const evenGroup = [];
+    for (let i = 0; i < numPlayers; i++) {
+        if (i % 2 === 0) {
+            oddGroup.push(i);
+        } else {
+            evenGroup.push(i);
+        }
+    }
+
     // Track how many times each player should play
     const targetPlays = players.map((_, i) =>
         i < extraSlots ? playsPerPlayer + 1 : playsPerPlayer
@@ -36,64 +49,67 @@ function createRotation(players) {
     // Track actual plays and last played period for each player
     const playerStats = players.map(() => ({
         playsCount: 0,
-        lastPlayedPeriod: -2 // Initialize to -2 so they can play period 0
+        lastPlayedPeriod: -2
     }));
 
     // Create roster: roster[period][colorIndex] = playerIndex
     const roster = Array(PERIODS).fill(null).map(() => Array(COLORS.length).fill(-1));
 
-    // For each period, assign players to colors
+    // Alternate between odd and even groups for each period
     for (let period = 0; period < PERIODS; period++) {
-        // Categorize players into priority groups
-        const mustPlay = []; // Players who sat out last period (to avoid sitting 2 in a row)
-        const canPlay = []; // Players who played last period but can play again
-        const done = []; // Players who've reached their target
+        // Start with the appropriate group based on period
+        const primaryGroup = period % 2 === 0 ? oddGroup : evenGroup;
+        const secondaryGroup = period % 2 === 0 ? evenGroup : oddGroup;
 
-        for (let playerIdx = 0; playerIdx < numPlayers; playerIdx++) {
-            const stats = playerStats[playerIdx];
+        const selectedPlayers = [];
 
-            // Skip if player has reached their target plays
-            if (stats.playsCount >= targetPlays[playerIdx]) {
-                done.push(playerIdx);
-                continue;
-            }
+        // Helper function to get available players from a group
+        const getAvailableFromGroup = (group) => {
+            return group.filter(playerIdx => {
+                const stats = playerStats[playerIdx];
+                // Can play if haven't reached target
+                return stats.playsCount < targetPlays[playerIdx];
+            }).sort((a, b) => {
+                const statsA = playerStats[a];
+                const statsB = playerStats[b];
 
-            // Must play if they sat out the previous period (to avoid 2 consecutive sit-outs)
-            if (stats.lastPlayedPeriod < period - 1) {
-                mustPlay.push(playerIdx);
-            } else {
-                canPlay.push(playerIdx);
-            }
-        }
+                // Prioritize those who sat out last period
+                if (statsA.lastPlayedPeriod < period - 1 && statsB.lastPlayedPeriod >= period - 1) return -1;
+                if (statsB.lastPlayedPeriod < period - 1 && statsA.lastPlayedPeriod >= period - 1) return 1;
 
-        // Sort each group by priority
-        const sortByPriority = (a, b) => {
-            const statsA = playerStats[a];
-            const statsB = playerStats[b];
+                // Then by play count (fewer plays = higher priority)
+                if (statsA.playsCount !== statsB.playsCount) {
+                    return statsA.playsCount - statsB.playsCount;
+                }
 
-            // By play count (ascending - fewer plays = higher priority)
-            if (statsA.playsCount !== statsB.playsCount) {
-                return statsA.playsCount - statsB.playsCount;
-            }
-
-            // By skill (lower index = more skilled = higher priority)
-            return a - b;
+                // Then by original order (skill level)
+                return a - b;
+            });
         };
 
-        mustPlay.sort(sortByPriority);
-        canPlay.sort(sortByPriority);
+        // First, get players from primary group
+        const availablePrimary = getAvailableFromGroup(primaryGroup);
+        selectedPlayers.push(...availablePrimary.slice(0, COLORS.length));
 
-        // Combine: mustPlay first, then canPlay
-        const selectedPlayers = [...mustPlay, ...canPlay].slice(0, COLORS.length);
-
-        // If we still don't have 5 players, add from done players (shouldn't happen with valid input)
+        // If we need more players, get from secondary group
         if (selectedPlayers.length < COLORS.length) {
-            done.sort(sortByPriority);
-            selectedPlayers.push(...done.slice(0, COLORS.length - selectedPlayers.length));
+            const availableSecondary = getAvailableFromGroup(secondaryGroup);
+            selectedPlayers.push(...availableSecondary.slice(0, COLORS.length - selectedPlayers.length));
+        }
+
+        // If still not enough (edge case), get anyone who can play
+        if (selectedPlayers.length < COLORS.length) {
+            const allAvailable = [];
+            for (let i = 0; i < numPlayers; i++) {
+                if (!selectedPlayers.includes(i)) {
+                    allAvailable.push(i);
+                }
+            }
+            selectedPlayers.push(...allAvailable.slice(0, COLORS.length - selectedPlayers.length));
         }
 
         // Assign selected players to this period's colors
-        for (let colorIdx = 0; colorIdx < selectedPlayers.length; colorIdx++) {
+        for (let colorIdx = 0; colorIdx < selectedPlayers.length && colorIdx < COLORS.length; colorIdx++) {
             const playerIdx = selectedPlayers[colorIdx];
             roster[period][colorIdx] = playerIdx;
             playerStats[playerIdx].playsCount++;
