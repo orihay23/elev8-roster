@@ -108,6 +108,9 @@ function createRotation(players) {
             selectedPlayers.push(...allAvailable.slice(0, COLORS.length - selectedPlayers.length));
         }
 
+        // Sort selected players by their original order (skill level) before assigning
+        selectedPlayers.sort((a, b) => a - b);
+
         // Assign selected players to this period's colors
         for (let colorIdx = 0; colorIdx < selectedPlayers.length && colorIdx < COLORS.length; colorIdx++) {
             const playerIdx = selectedPlayers[colorIdx];
