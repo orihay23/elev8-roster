@@ -30,55 +30,55 @@ function createRotation(players) {
     const numPlayers = players.length;
 
     // Hardcoded rotations for supported player counts
-    // Each rotation is an array of 6 periods, each period has 5 player indices
+    // Each rotation is an array of 6 periods, each period has 5 player indices (in order)
     const rotations = {
         5: [
-            [0, 1, 2, 3, 4], // Period 1: all 5 play
-            [0, 1, 2, 3, 4], // Period 2: all 5 play
-            [0, 1, 2, 3, 4], // Period 3: all 5 play
-            [0, 1, 2, 3, 4], // Period 4: all 5 play
-            [0, 1, 2, 3, 4], // Period 5: all 5 play
-            [0, 1, 2, 3, 4]  // Period 6: all 5 play
+            [0, 1, 2, 3, 4], // Period 1: 1,2,3,4,5
+            [0, 1, 2, 3, 4], // Period 2: 1,2,3,4,5
+            [0, 1, 2, 3, 4], // Period 3: 1,2,3,4,5
+            [0, 1, 2, 3, 4], // Period 4: 1,2,3,4,5
+            [0, 1, 2, 3, 4], // Period 5: 1,2,3,4,5
+            [0, 1, 2, 3, 4]  // Period 6: 1,2,3,4,5
         ],
         6: [
-            [0, 2, 4, 5, 1], // Period 1: 1,3,5,6,2 (alternating + extras)
-            [1, 3, 5, 0, 2], // Period 2: 2,4,6,1,3
-            [0, 2, 4, 1, 3], // Period 3: 1,3,5,2,4
-            [1, 3, 5, 2, 4], // Period 4: 2,4,6,3,5
-            [0, 2, 4, 3, 5], // Period 5: 1,3,5,4,6
-            [1, 3, 5, 0, 4]  // Period 6: 2,4,6,1,5
+            [0, 1, 2, 4, 5], // Period 1: 1,2,3,5,6 (odds 1,3,5 + evens 2,6)
+            [0, 1, 2, 3, 5], // Period 2: 1,2,3,4,6 (evens 2,4,6 + odds 1,3)
+            [0, 1, 2, 3, 4], // Period 3: 1,2,3,4,5 (odds 1,3,5 + evens 2,4)
+            [0, 1, 3, 4, 5], // Period 4: 1,2,4,5,6 (evens 2,4,6 + odds 1,5)
+            [0, 2, 3, 4, 5], // Period 5: 1,3,4,5,6 (odds 1,3,5 + evens 4,6)
+            [1, 2, 3, 4, 5]  // Period 6: 2,3,4,5,6 (evens 2,4,6 + odds 3,5)
         ],
         7: [
-            [0, 2, 4, 6, 1], // Period 1: 1,3,5,7,2
-            [1, 3, 5, 0, 2], // Period 2: 2,4,6,1,3
-            [0, 2, 4, 6, 3], // Period 3: 1,3,5,7,4
-            [1, 3, 5, 2, 4], // Period 4: 2,4,6,3,5
-            [0, 2, 4, 6, 5], // Period 5: 1,3,5,7,6
-            [1, 3, 5, 0, 6]  // Period 6: 2,4,6,1,7
+            [0, 1, 2, 4, 6], // Period 1: 1,2,3,5,7 (odds 1,3,5,7 + even 2)
+            [0, 1, 2, 3, 5], // Period 2: 1,2,3,4,6 (evens 2,4,6 + odds 1,3)
+            [0, 2, 3, 4, 6], // Period 3: 1,3,4,5,7 (odds 1,3,5,7 + even 4)
+            [1, 2, 3, 4, 5], // Period 4: 2,3,4,5,6 (evens 2,4,6 + odds 3,5)
+            [0, 2, 4, 5, 6], // Period 5: 1,3,5,6,7 (odds 1,3,5,7 + even 6)
+            [0, 1, 3, 5, 6], // Period 6: 1,2,4,6,7 (evens 2,4,6 + odds 1,7)
         ],
         8: [
-            [0, 2, 4, 6, 1], // Period 1: 1,3,5,7,2
-            [1, 3, 5, 7, 0], // Period 2: 2,4,6,8,1
-            [0, 2, 4, 6, 3], // Period 3: 1,3,5,7,4
-            [1, 3, 5, 7, 2], // Period 4: 2,4,6,8,3
-            [0, 2, 4, 6, 5], // Period 5: 1,3,5,7,6
-            [1, 3, 5, 7, 4]  // Period 6: 2,4,6,8,5
+            [0, 1, 2, 4, 6], // Period 1: 1,2,3,5,7 (odds 1,3,5,7 + even 2)
+            [0, 1, 3, 5, 7], // Period 2: 1,2,4,6,8 (evens 2,4,6,8 + odd 1)
+            [0, 2, 3, 4, 6], // Period 3: 1,3,4,5,7 (odds 1,3,5,7 + even 4)
+            [1, 2, 3, 5, 7], // Period 4: 2,3,4,6,8 (evens 2,4,6,8 + odd 3)
+            [0, 2, 4, 5, 6], // Period 5: 1,3,5,6,7 (odds 1,3,5,7 + even 6)
+            [1, 3, 4, 5, 7]  // Period 6: 2,4,5,6,8 (evens 2,4,6,8 + odd 5)
         ],
         9: [
-            [0, 2, 4, 6, 8], // Period 1: 1,3,5,7,9
-            [1, 3, 5, 7, 0], // Period 2: 2,4,6,8,1
-            [0, 2, 4, 6, 8], // Period 3: 1,3,5,7,9
-            [1, 3, 5, 7, 2], // Period 4: 2,4,6,8,3
-            [0, 2, 4, 6, 8], // Period 5: 1,3,5,7,9
-            [1, 3, 5, 7, 4]  // Period 6: 2,4,6,8,5
+            [0, 2, 4, 6, 8], // Period 1: 1,3,5,7,9 (all odds)
+            [0, 1, 3, 5, 7], // Period 2: 1,2,4,6,8 (evens 2,4,6,8 + odd 1)
+            [0, 2, 4, 6, 8], // Period 3: 1,3,5,7,9 (all odds)
+            [1, 2, 3, 5, 7], // Period 4: 2,3,4,6,8 (evens 2,4,6,8 + odd 3)
+            [0, 2, 4, 6, 8], // Period 5: 1,3,5,7,9 (all odds)
+            [1, 3, 4, 5, 7]  // Period 6: 2,4,5,6,8 (evens 2,4,6,8 + odd 5)
         ],
         10: [
-            [0, 2, 4, 6, 8], // Period 1: 1,3,5,7,9
-            [1, 3, 5, 7, 9], // Period 2: 2,4,6,8,10
-            [0, 2, 4, 6, 8], // Period 3: 1,3,5,7,9
-            [1, 3, 5, 7, 9], // Period 4: 2,4,6,8,10
-            [0, 2, 4, 6, 8], // Period 5: 1,3,5,7,9
-            [1, 3, 5, 7, 9]  // Period 6: 2,4,6,8,10
+            [0, 2, 4, 6, 8], // Period 1: 1,3,5,7,9 (all odds)
+            [1, 3, 5, 7, 9], // Period 2: 2,4,6,8,10 (all evens)
+            [0, 2, 4, 6, 8], // Period 3: 1,3,5,7,9 (all odds)
+            [1, 3, 5, 7, 9], // Period 4: 2,4,6,8,10 (all evens)
+            [0, 2, 4, 6, 8], // Period 5: 1,3,5,7,9 (all odds)
+            [1, 3, 5, 7, 9]  // Period 6: 2,4,6,8,10 (all evens)
         ]
     };
 
