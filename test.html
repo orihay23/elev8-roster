@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Roster Algorithm</title>
+</head>
+<body>
+    <h1>Testing Roster Algorithm</h1>
+    <pre id="output"></pre>
+
+    <script src="script.js"></script>
+    <script>
+        // Test with different player counts
+        const testCases = [
+            ['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace', 'Henry'],
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10'],
+            ['A', 'B', 'C', 'D', 'E']
+        ];
+
+        let output = '';
+
+        testCases.forEach((players, idx) => {
+            output += `\n=== Test Case ${idx + 1}: ${players.length} players ===\n`;
+            output += `Players: ${players.join(', ')}\n\n`;
+
+            const roster = createRotation(players);
+
+            // Display roster
+            output += 'Period:  ';
+            for (let p = 1; p <= 6; p++) output += `    ${p}    `;
+            output += '\n';
+
+            ['Yellow', 'Orange', 'Red', 'Green', 'Blue'].forEach((color, colorIdx) => {
+                output += color.padEnd(8) + ' ';
+                for (let period = 0; period < 6; period++) {
+                    const playerIdx = roster[period][colorIdx];
+                    const name = playerIdx !== -1 ? players[playerIdx] : '-';
+                    output += name.padEnd(8) + ' ';
+                }
+                output += '\n';
+            });
+
+            // Check constraints
+            const playCount = Array(players.length).fill(0);
+            roster.forEach(period => {
+                period.forEach(playerIdx => {
+                    if (playerIdx !== -1) playCount[playerIdx]++;
+                });
+            });
+
+            output += '\nPlay counts: ';
+            players.forEach((p, i) => {
+                output += `${p}=${playCount[i]} `;
+            });
+            output += '\n';
+
+            // Check for sitting out 2+ in a row
+            const playerPeriods = Array(players.length).fill(null).map(() => []);
+            roster.forEach((period, periodIdx) => {
+                period.forEach(playerIdx => {
+                    if (playerIdx !== -1) {
+                        playerPeriods[playerIdx].push(periodIdx);
+                    }
+                });
+            });
+
+            let violations = false;
+            players.forEach((player, playerIdx) => {
+                const periods = playerPeriods[playerIdx];
+                for (let i = 0; i < periods.length - 1; i++) {
+                    if (periods[i + 1] - periods[i] > 2) {
+                        output += `⚠️  ${player} sits out ${periods[i + 1] - periods[i] - 1} periods (${periods[i] + 2}-${periods[i + 1]})\n`;
+                        violations = true;
+                    }
+                }
+            });
+
+            if (!violations) {
+                output += '✓ No sitting violations!\n';
+            }
+
+            output += '\n';
+        });
+
+        document.getElementById('output').textContent = output;
+        console.log(output);
+    </script>
+</body>
+</html>

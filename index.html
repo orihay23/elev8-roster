@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elev8 Basketball Roster</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🏀 Elev8 Basketball Roster Generator</h1>
+
+        <div class="input-section">
+            <label for="playerInput">
+                Enter players (comma or line-separated, from most to least skilled):
+            </label>
+            <textarea
+                id="playerInput"
+                placeholder="Player 1, Player 2, Player 3&#10;or&#10;Player 1&#10;Player 2&#10;Player 3"
+                rows="10"
+            ></textarea>
+            <button onclick="generateRoster()">Generate Roster</button>
+        </div>
+
+        <div id="output" class="output-section"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
