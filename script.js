@@ -176,7 +176,7 @@ function displayRoster(roster, players) {
     // Header row
     html += '<tr><th>Color</th>';
     for (let period = 1; period <= PERIODS; period++) {
-        html += `<th>Period ${period}</th>`;
+        html += `<th>${period}</th>`;
     }
     html += '</tr>';
 
@@ -215,7 +215,7 @@ function copyRosterToClipboard() {
     // Create tab-separated text format for easy pasting into spreadsheets
     let text = 'Color';
     for (let period = 1; period <= PERIODS; period++) {
-        text += `\tPeriod ${period}`;
+        text += `\t${period}`;
     }
     text += '\n';
 
