@@ -28,7 +28,7 @@ function generateRoster() {
 
 function createRotation(players) {
     const numPlayers = players.length;
-    const useAlternate = document.getElementById('useAlternate')?.checked || false;
+    const shiftAmount = parseInt(document.getElementById('rotationShift')?.value || 0);
 
     // Primary rotations: balance skill distribution
     const rotations = {
@@ -89,26 +89,33 @@ function createRotation(players) {
 
     const primaryRotation = rotations[numPlayers];
 
-    // Generate alternate rotation by shifting player indices by 1
-    if (useAlternate) {
-        return primaryRotation.map(period =>
-            period.map(playerIdx => (playerIdx + 1) % numPlayers).sort((a, b) => a - b)
-        );
+    // Generate rotation by shifting player indices by shiftAmount
+    if (shiftAmount === 0) {
+        return primaryRotation;
     }
 
-    return primaryRotation;
+    return primaryRotation.map(period =>
+        period.map(playerIdx => (playerIdx + shiftAmount) % numPlayers).sort((a, b) => a - b)
+    );
 }
 
 function displayRoster(roster, players) {
-    const useAlternate = document.getElementById('useAlternate')?.checked || false;
+    const numPlayers = players.length;
+    const currentShift = document.getElementById('rotationShift')?.value || 0;
 
     let html = '<h2>Roster Schedule</h2>';
 
-    // Add rotation toggle
+    // Add rotation selector dropdown
     html += '<div class="rotation-toggle">';
     html += '<label class="toggle-label">';
-    html += `<input type="checkbox" id="useAlternate" ${useAlternate ? 'checked' : ''} onchange="generateRoster()" />`;
-    html += '<span>Use alternate rotation (gives weaker players more playing time)</span>';
+    html += '<span style="margin-right: 10px;">Rotation:</span>';
+    html += '<select id="rotationShift" onchange="generateRoster()">';
+    for (let i = 0; i < numPlayers; i++) {
+        const selected = i == currentShift ? 'selected' : '';
+        const label = i === 0 ? `${i} (Primary)` : `${i}`;
+        html += `<option value="${i}" ${selected}>${label}</option>`;
+    }
+    html += '</select>';
     html += '</label>';
     html += '</div>';
 
