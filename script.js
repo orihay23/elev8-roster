@@ -82,67 +82,21 @@ function createRotation(players) {
         ]
     };
 
-    // Alternate rotations: give weaker players (higher numbers) more playing time
-    const alternateRotations = {
-        5: [
-            [0, 1, 2, 3, 4], // Same as primary (all play equally)
-            [0, 1, 2, 3, 4],
-            [0, 1, 2, 3, 4],
-            [0, 1, 2, 3, 4],
-            [0, 1, 2, 3, 4],
-            [0, 1, 2, 3, 4]
-        ],
-        6: [
-            [0, 1, 2, 3, 4], // Period 1: 1,2,3,4,5 (all play equally - different pattern)
-            [1, 2, 3, 4, 5], // Period 2: 2,3,4,5,6
-            [0, 1, 2, 4, 5], // Period 3: 1,2,3,5,6
-            [0, 2, 3, 4, 5], // Period 4: 1,3,4,5,6
-            [0, 1, 3, 4, 5], // Period 5: 1,2,4,5,6
-            [0, 1, 2, 3, 5]  // Period 6: 1,2,3,4,6
-        ],
-        7: [
-            [0, 1, 2, 3, 4], // Period 1: 1,2,3,4,5
-            [1, 2, 3, 5, 6], // Period 2: 2,3,4,6,7 (players 6,7 get more time)
-            [0, 2, 4, 5, 6], // Period 3: 1,3,5,6,7
-            [0, 1, 3, 5, 6], // Period 4: 1,2,4,6,7
-            [1, 2, 4, 5, 6], // Period 5: 2,3,5,6,7
-            [0, 1, 3, 4, 5]  // Period 6: 1,2,4,5,6
-        ],
-        8: [
-            [0, 1, 2, 3, 4], // Period 1: 1,2,3,4,5
-            [2, 3, 5, 6, 7], // Period 2: 3,4,6,7,8 (players 1,2 get less time)
-            [0, 2, 4, 5, 6], // Period 3: 1,3,5,6,7
-            [1, 3, 4, 5, 7], // Period 4: 2,4,5,6,8
-            [2, 4, 5, 6, 7], // Period 5: 3,5,6,7,8
-            [0, 3, 4, 6, 7]  // Period 6: 1,4,5,7,8
-        ],
-        9: [
-            [0, 2, 4, 6, 8], // Period 1: 1,3,5,7,9 (all odds)
-            [1, 3, 4, 5, 7], // Period 2: 2,4,5,6,8 (players 5,7,9 get more time)
-            [0, 2, 4, 6, 8], // Period 3: 1,3,5,7,9
-            [1, 3, 5, 6, 7], // Period 4: 2,4,6,7,8
-            [0, 2, 4, 6, 8], // Period 5: 1,3,5,7,9
-            [1, 3, 5, 7, 8]  // Period 6: 2,4,6,8,9
-        ],
-        10: [
-            [1, 3, 5, 7, 9], // Period 1: 2,4,6,8,10 (start with evens)
-            [0, 2, 4, 6, 8], // Period 2: 1,3,5,7,9
-            [1, 3, 5, 7, 9], // Period 3: 2,4,6,8,10
-            [0, 2, 4, 6, 8], // Period 4: 1,3,5,7,9
-            [1, 3, 5, 7, 9], // Period 5: 2,4,6,8,10
-            [0, 2, 4, 6, 8]  // Period 6: 1,3,5,7,9
-        ]
-    };
-
-    const selectedRotations = useAlternate ? alternateRotations : rotations;
-
     // Check if we support this number of players
-    if (!selectedRotations[numPlayers]) {
+    if (!rotations[numPlayers]) {
         throw new Error(`Only 5-10 players are supported. You entered ${numPlayers} players.`);
     }
 
-    // Return the hardcoded rotation
-    return selectedRotations[numPlayers];
+    const primaryRotation = rotations[numPlayers];
+
+    // Generate alternate rotation by shifting player indices by 1
+    if (useAlternate) {
+        return primaryRotation.map(period =>
+            period.map(playerIdx => (playerIdx + 1) % numPlayers).sort((a, b) => a - b)
+        );
+    }
+
+    return primaryRotation;
 }
 
 function displayRoster(roster, players) {
