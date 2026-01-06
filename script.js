@@ -100,7 +100,17 @@ function createRotation(players) {
 }
 
 function displayRoster(roster, players) {
+    const useAlternate = document.getElementById('useAlternate')?.checked || false;
+
     let html = '<h2>Roster Schedule</h2>';
+
+    // Add rotation toggle
+    html += '<div class="rotation-toggle">';
+    html += '<label class="toggle-label">';
+    html += `<input type="checkbox" id="useAlternate" ${useAlternate ? 'checked' : ''} onchange="generateRoster()" />`;
+    html += '<span>Use alternate rotation (gives weaker players more playing time)</span>';
+    html += '</label>';
+    html += '</div>';
 
     // Add action buttons
     html += '<div class="action-buttons">';
