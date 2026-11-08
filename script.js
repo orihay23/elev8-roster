@@ -1,5 +1,23 @@
 const COLORS = ['Yellow', 'Orange', 'Red', 'Green', 'Blue'];
 const PERIODS = 6;
+const MIN_PLAYERS = 5;
+const MAX_PLAYERS = 10;
+const STORAGE_KEY = 'elev8-roster-state';
+
+// App state: the full ordered roster, who is here, and the selected rotation shift.
+const state = {
+    players: [], // [{ name, present }]
+    shift: 0
+};
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 function parsePlayerInput(input) {
     // Split by newlines and commas, filter out empty strings
@@ -9,26 +27,153 @@ function parsePlayerInput(input) {
         .filter(name => name.length > 0);
 }
 
-function generateRoster() {
-    const input = document.getElementById('playerInput').value;
-    const players = parsePlayerInput(input);
+function presentPlayers() {
+    return state.players.filter(p => p.present).map(p => p.name);
+}
 
-    if (players.length === 0) {
-        document.getElementById('output').innerHTML = '<p class="error">Please enter at least one player.</p>';
-        return;
-    }
+// ---------- Persistence ----------
 
+function saveState() {
     try {
-        const roster = createRotation(players);
-        displayRoster(roster, players);
-    } catch (error) {
-        document.getElementById('output').innerHTML = `<p class="error">${error.message}</p>`;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+        // Storage can be unavailable (e.g. private browsing); the app still works without it.
     }
 }
 
-function createRotation(players) {
+function loadState() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved && Array.isArray(saved.players)) {
+            state.players = saved.players
+                .filter(p => p && typeof p.name === 'string')
+                .map(p => ({ name: p.name, present: p.present !== false }));
+            state.shift = Number.isInteger(saved.shift) ? saved.shift : 0;
+        }
+    } catch (e) {
+        // Ignore corrupt or unavailable storage
+    }
+}
+
+// ---------- Views ----------
+
+function showView(view) {
+    document.getElementById('rosterView').hidden = view !== 'roster';
+    document.getElementById('scheduleView').hidden = view !== 'schedule';
+    window.scrollTo(0, 0);
+}
+
+function showEditor(show) {
+    document.getElementById('listEditor').hidden = !show;
+    document.getElementById('attendance').hidden = show;
+    document.getElementById('editorMessage').hidden = true;
+    // Cancel only makes sense if there is a list to go back to
+    document.getElementById('cancelEditButton').hidden = state.players.length === 0;
+    if (show) {
+        document.getElementById('playerInput').value = state.players.map(p => p.name).join('\n');
+    }
+}
+
+function renderAttendance() {
+    const list = document.getElementById('playerList');
+    list.innerHTML = state.players.map((p, i) => `
+        <li>
+            <button class="player-row ${p.present ? '' : 'absent'}" data-index="${i}" aria-pressed="${!p.present}">
+                <span class="player-rank">${i + 1}</span>
+                <span class="player-name">${escapeHtml(p.name)}</span>
+                <span class="player-status">${p.present ? '✓ Here' : 'Absent'}</span>
+            </button>
+        </li>`).join('');
+
+    const count = presentPlayers().length;
+    document.getElementById('presentCount').textContent = `${count} of ${state.players.length} here`;
+
+    const ok = count >= MIN_PLAYERS && count <= MAX_PLAYERS;
+    const button = document.getElementById('generateButton');
+    const message = document.getElementById('generateMessage');
+    button.disabled = !ok;
+    message.hidden = ok;
+    if (!ok) {
+        message.textContent = count < MIN_PLAYERS
+            ? `Need at least ${MIN_PLAYERS} players here (currently ${count}).`
+            : `At most ${MAX_PLAYERS} players are supported (currently ${count}).`;
+    }
+}
+
+function loadList() {
+    const names = parsePlayerInput(document.getElementById('playerInput').value);
+    if (names.length === 0) {
+        const message = document.getElementById('editorMessage');
+        message.textContent = 'Please enter at least one player.';
+        message.hidden = false;
+        return;
+    }
+
+    // Keep absent marks for names that were already on the list
+    const previouslyAbsent = new Set(state.players.filter(p => !p.present).map(p => p.name));
+    state.players = names.map(name => ({ name, present: !previouslyAbsent.has(name) }));
+    state.shift = 0;
+    saveState();
+
+    showEditor(false);
+    renderAttendance();
+}
+
+function togglePlayer(index) {
+    const player = state.players[index];
+    if (!player) return;
+    player.present = !player.present;
+    state.shift = 0; // attendance changed, so start again from the primary rotation
+    saveState();
+    renderAttendance();
+}
+
+function generateRoster() {
+    const players = presentPlayers();
+    try {
+        const roster = createRotation(players, state.shift);
+        displayRoster(roster, players);
+        showView('schedule');
+    } catch (error) {
+        const message = document.getElementById('generateMessage');
+        message.textContent = error.message;
+        message.hidden = false;
+    }
+}
+
+function changeShift(value) {
+    state.shift = parseInt(value, 10) || 0;
+    saveState();
+    const players = presentPlayers();
+    displayRoster(createRotation(players, state.shift), players);
+}
+
+function init() {
+    loadState();
+
+    document.getElementById('loadListButton').addEventListener('click', loadList);
+    document.getElementById('cancelEditButton').addEventListener('click', () => showEditor(false));
+    document.getElementById('editListButton').addEventListener('click', () => showEditor(true));
+    document.getElementById('generateButton').addEventListener('click', generateRoster);
+    document.getElementById('backButton').addEventListener('click', () => showView('roster'));
+    document.getElementById('playerList').addEventListener('click', e => {
+        const row = e.target.closest('.player-row');
+        if (row) togglePlayer(parseInt(row.dataset.index, 10));
+    });
+
+    showView('roster');
+    showEditor(state.players.length === 0);
+    renderAttendance();
+}
+
+// Only wire up the UI on the main page (test.html loads this file without it)
+if (typeof document !== 'undefined' && document.getElementById('rosterView')) {
+    document.addEventListener('DOMContentLoaded', init);
+}
+
+function createRotation(players, shift = 0) {
     const numPlayers = players.length;
-    const shiftAmount = parseInt(document.getElementById('rotationShift')?.value || 0);
+    const shiftAmount = ((shift % numPlayers) + numPlayers) % numPlayers;
 
     // Primary rotations: balance skill distribution
     const rotations = {
@@ -101,7 +246,7 @@ function createRotation(players) {
 
 function displayRoster(roster, players) {
     const numPlayers = players.length;
-    const currentShift = document.getElementById('rotationShift')?.value || 0;
+    const currentShift = state.shift;
 
     let html = '<h2>Roster Schedule</h2>';
 
@@ -109,7 +254,7 @@ function displayRoster(roster, players) {
     html += '<div class="rotation-toggle">';
     html += '<label class="toggle-label">';
     html += '<span style="margin-right: 10px;">Rotation:</span>';
-    html += '<select id="rotationShift" onchange="generateRoster()">';
+    html += '<select id="rotationShift" onchange="changeShift(this.value)">';
     for (let i = 0; i < numPlayers; i++) {
         const selected = i == currentShift ? 'selected' : '';
         const label = i === 0 ? `${i} (Primary)` : `${i}`;
@@ -121,7 +266,7 @@ function displayRoster(roster, players) {
 
     // Add action buttons
     html += '<div class="action-buttons">';
-    html += '<button class="copy-button" onclick="copyRosterToClipboard()">📋 Copy Table</button>';
+    html += '<button class="copy-button" onclick="copyRosterToClipboard(this)">📋 Copy Table</button>';
     html += '<button class="fullscreen-button" onclick="openFullscreen()">🖼️ Fullscreen</button>';
     html += '</div>';
 
@@ -137,7 +282,7 @@ function displayRoster(roster, players) {
     html += '<h3>Player Summary</h3>';
     html += '<table class="summary-table"><tr><th>Player</th><th>Periods Playing</th></tr>';
     players.forEach((player, idx) => {
-        html += `<tr><td>${player}</td><td>${playCount[idx]}</td></tr>`;
+        html += `<tr><td>${escapeHtml(player)}</td><td>${playCount[idx]}</td></tr>`;
     });
     html += '</table></div>';
 
@@ -158,7 +303,7 @@ function displayRoster(roster, players) {
         for (let period = 0; period < PERIODS; period++) {
             const playerIdx = roster[period][colorIdx];
             const playerName = playerIdx !== -1 ? players[playerIdx] : '-';
-            html += `<td class="player-cell">${playerName}</td>`;
+            html += `<td class="player-cell">${escapeHtml(playerName)}</td>`;
         }
 
         html += '</tr>';
@@ -175,7 +320,7 @@ function displayRoster(roster, players) {
     window.currentRoster = { roster, players };
 }
 
-function copyRosterToClipboard() {
+function copyRosterToClipboard(button) {
     if (!window.currentRoster) {
         alert('No roster to copy!');
         return;
@@ -204,7 +349,6 @@ function copyRosterToClipboard() {
     // Copy to clipboard
     navigator.clipboard.writeText(text).then(() => {
         // Show success feedback
-        const button = event.target;
         const originalText = button.innerHTML;
         button.innerHTML = '✓ Copied!';
         button.classList.add('copied');
@@ -323,7 +467,7 @@ function checkConstraints(roster, players) {
         const periods = playerPeriods[playerIdx];
         for (let i = 0; i < periods.length - 1; i++) {
             if (periods[i + 1] - periods[i] > 2) {
-                html += `<p class="warning">⚠️ ${player} sits out periods ${periods[i] + 2} through ${periods[i + 1]}</p>`;
+                html += `<p class="warning">⚠️ ${escapeHtml(player)} sits out periods ${periods[i] + 2} through ${periods[i + 1]}</p>`;
                 allGood = false;
             }
         }

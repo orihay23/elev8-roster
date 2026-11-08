@@ -389,3 +389,146 @@ h3 {
         padding: 8px 4px;
     }
 }
+
+/* ---------- Roster / attendance view ---------- */
+
+[hidden] {
+    display: none !important;
+}
+
+button:disabled {
+    background: #c7c9d1;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.editor-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.secondary-button,
+.back-button {
+    background: #eef0f7;
+    color: #444;
+}
+
+.secondary-button:hover,
+.back-button:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.back-button {
+    margin: 0 0 10px;
+}
+
+.link-button {
+    background: none;
+    color: #667eea;
+    padding: 6px 10px;
+    margin: 0;
+    font-size: 14px;
+}
+
+.link-button:hover {
+    background: #eef0f7;
+    transform: none;
+    box-shadow: none;
+}
+
+.attendance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.present-count {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #333;
+}
+
+.attendance-hint {
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.attendance-warning {
+    color: #b45309;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.player-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.player-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 12px 16px;
+    background: #f1f8f3;
+    color: #333;
+    border: 2px solid #b7dfc3;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: left;
+}
+
+.player-row:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.player-rank {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.player-name {
+    flex: 1;
+}
+
+.player-status {
+    font-size: 13px;
+    font-weight: 700;
+    color: #28a745;
+}
+
+.player-row.absent {
+    background: #f4f4f6;
+    border-color: #ddd;
+    color: #999;
+}
+
+.player-row.absent .player-name {
+    text-decoration: line-through;
+}
+
+.player-row.absent .player-rank {
+    background: #bbb;
+}
+
+.player-row.absent .player-status {
+    color: #dc3545;
+}

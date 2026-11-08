@@ -14,11 +14,12 @@ A simple web application for generating fair basketball roster rotations for you
 ## How to Use
 
 1. Open `index.html` in your web browser
-2. Enter your player names in the text area, either:
-   - Comma-separated: `Player1, Player2, Player3`
-   - Line-separated (one per line)
-3. Click "Generate Roster"
-4. View the generated schedule showing which player plays on which color team for each period
+2. Enter your player names in order (comma- or line-separated) and click **Load List**
+3. Tap any player who isn't here to mark them absent (tap again to bring them back)
+4. Click **Generate Roster** to see the schedule; use the **Rotation** dropdown to try variations
+5. Click **← Back to roster** to change attendance and regenerate
+
+The roster, attendance and selected rotation are saved in your browser, so next time you only need to mark who's missing. Use **Edit list** to add or remove players permanently.
 
 ## Game Structure
 

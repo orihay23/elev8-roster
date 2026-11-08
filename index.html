@@ -10,20 +10,41 @@
     <div class="container">
         <h1>🏀 Elev8 Basketball Roster Generator</h1>
 
-        <div class="input-section">
-            <label for="playerInput">
-                Enter players in order (comma or line-separated):
-            </label>
-            <textarea
-                id="playerInput"
-                placeholder="Player 1, Player 2, Player 3&#10;or&#10;Player 1&#10;Player 2&#10;Player 3"
-                rows="10"
-            ></textarea>
+        <!-- Roster view: enter the list, then mark who is here -->
+        <div id="rosterView">
+            <div id="listEditor" class="input-section">
+                <label for="playerInput">
+                    Enter players in order (comma or line-separated):
+                </label>
+                <textarea
+                    id="playerInput"
+                    placeholder="Player 1, Player 2, Player 3&#10;or&#10;Player 1&#10;Player 2&#10;Player 3"
+                    rows="10"
+                ></textarea>
+                <div class="editor-buttons">
+                    <button id="loadListButton">Load List</button>
+                    <button id="cancelEditButton" class="secondary-button">Cancel</button>
+                </div>
+                <p id="editorMessage" class="error" hidden></p>
+            </div>
 
-            <button onclick="generateRoster()">Generate Roster</button>
+            <div id="attendance" class="input-section">
+                <div class="attendance-header">
+                    <span id="presentCount" class="present-count"></span>
+                    <button id="editListButton" class="link-button">✏️ Edit list</button>
+                </div>
+                <p class="attendance-hint">Tap a player to mark them absent. Tap again to bring them back.</p>
+                <ul id="playerList" class="player-list"></ul>
+                <button id="generateButton">Generate Roster</button>
+                <p id="generateMessage" class="attendance-warning" hidden></p>
+            </div>
         </div>
 
-        <div id="output" class="output-section"></div>
+        <!-- Schedule view: the generated table -->
+        <div id="scheduleView" hidden>
+            <button id="backButton" class="back-button">← Back to roster</button>
+            <div id="output" class="output-section"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>
